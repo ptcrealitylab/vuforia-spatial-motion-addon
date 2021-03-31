@@ -193,6 +193,15 @@ Once the robot has reached that first Path Point, the Path Point will send a sig
 The Complex Data node is a special node that allows a more complex data structure to be sent between nodes.
 It is represented with a triangle instead of a circle.
 
+### Authors
+
+* **[Anna Fuste](https://github.com/afustePTC)**
+
+See also the list of [contributors](https://github.com/ptcrealitylab/vuforia-spatial-motion-addon/contributors) who participated in this project.
+
+### License
+
+This project is licensed under the MPL 2.0 License - see the [LICENSE](https://github.com/ptcrealitylab/vuforia-spatial-robotic-addon/blob/master/LICENSE) file for details
 
 
 
