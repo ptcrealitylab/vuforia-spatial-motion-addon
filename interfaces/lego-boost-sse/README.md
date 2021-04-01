@@ -1,7 +1,7 @@
 ---
 layout: doc
 title: Lego Boost Kinetic AR Prototyping
-permalink: /docs/vuforia-spatial-robotic-addon/interfaces/lego-boost/README
+permalink: /docs/vuforia-spatial-motion-addon/interfaces/lego-boost/README
 ---
 
 > IMPORTANT NOTE: The accuracy of this interface highly depends on floor friction and motor power that can have small variations from robot to robot. In order to improve the accuracy of the interface make sure you adjust the parameters properly for your own Lego Boost.
@@ -35,13 +35,13 @@ You will have to clone or download the code for the VST repositories as explaine
 
 1. Download the [vuforia-spatial-edge-server](https://github.com/ptcrealitylab/vuforia-spatial-edge-server) code and place it in your Development folder on your computer.
 
-2. Download the [vuforia-spatial-robotic-addon](https://github.com/ptcrealitylab/vuforia-spatial-robotic-addon) code and place it in the following folder:
+2. Download the [vuforia-spatial-motion-addon](https://github.com/ptcrealitylab/vuforia-spatial-motion-addon) code and place it in the following folder:
 
 ```
 vuforia-spatial-edge-server/addons/
 ```
 
-This folder contains all the code you need for your robotic addon. A robotic addon is in charge of communicating with a specific piece of hardware/robot.
+This folder contains all the code you need for your robotic motion addon. A robotic motion addon is in charge of communicating with a specific piece of hardware/robot.
 The robotic addon interface will be in charge of talking to the robot and generating the specific nodes and logic needed for path planning.
 
 ### Installing Node.js
@@ -57,7 +57,7 @@ npm install
 
 This will install all the Node.js dependencies needed in your VST Server. 
 
-Now navigate to your vuforia-spatial-robotic-addon folder and npm install again:
+Now navigate to your vuforia-spatial-motion-addon folder and npm install again:
 
 ```
 npm install
@@ -240,11 +240,11 @@ When you activate this button, the robot will start following the path.
 
 * **[Anna Fuste](https://github.com/afustePTC)**
 
-See also the list of [contributors](https://github.com/ptcrealitylab/vuforia-spatial-robotic-addon/contributors) who participated in this project.
+See also the list of [contributors](https://github.com/ptcrealitylab/vuforia-spatial-motion-addon/contributors) who participated in this project.
 
 ### License
 
-This project is licensed under the MPL 2.0 License - see the [LICENSE](https://github.com/ptcrealitylab/vuforia-spatial-robotic-addon/blob/master/LICENSE) file for details
+This project is licensed under the MPL 2.0 License - see the [LICENSE](https://github.com/ptcrealitylab/vuforia-spatial-motion-addon/blob/master/LICENSE) file for details
 
 ### Acknowledgments
 

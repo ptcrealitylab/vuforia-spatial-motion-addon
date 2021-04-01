@@ -1,7 +1,7 @@
 ---
 layout: doc
-title: Lego Boost Kinetic AR Prototyping
-permalink: /docs/vuforia-spatial-robotic-addon/interfaces/lego-boost/README
+title: Kinetic AR Motion Prototyping
+permalink: /docs/vuforia-spatial-motion-addon/README
 ---
 
 # vuforia-spatial-motion-addon
