@@ -43,7 +43,7 @@ In this README file we will explain how to setup a path planning interface for t
 Your robot will need a Vuforia object target in order to be identified and tracked.
 You will have to generate this object target from the Vuforia Developer Portal. But first, you need to know the name of your target. Do the following:
 
-With the server running, follow this steps on the VST Server interface on your browser:
+With the server running, follow these steps on the VST Server interface on your browser:
 
 * Click on 'Add Object'. Give this object the name of your robot: 'legoBoost'.
 * Click on 'Add Target'
@@ -132,7 +132,7 @@ At this point, if you run the server again and then turn on the Boost by pressin
 
 Introduction to the components involved in the demo:
 
-1. A Path tool that will act as a container for the positions in our path.The Path tool is an Envelope tool. To understand better how Enevlope tools work, visit our tutorial here: 
+1. A Path tool that will act as a container for the positions in our path. The Path tool is an Envelope tool. To understand better how Enevlope tools work, visit our tutorial here: 
 [Advanced Tool Tutorial: Envelopes (Part 1)](https://spatialtoolbox.vuforia.com/docs/tutorials/envelope-tool-tutorial-part-1)
 
 ```
@@ -156,7 +156,7 @@ vuforia-spatial-edge-server/addons/vuforia-spatial-motion-addon/interfaces/lego-
 In order for this demo to run properly, it is required to use a World Object. 
 The World Object is a reference target that you will track with the Vuforia Spatial Toolbox application, in order to have a static origin reference to your environment.
 If you don't have a World Object setup, you won't be able to add Path Points to your path.
-Setup your World Object in the browser interface of the server, using another Vuforia target generated in the Vuforia Developer Portal.
+Setup your World Object in the browser interface of the server, using another Vuforia target generated in the Vuforia Developer Portal. We recommend using an image target that you can print out and place on your floor.
 
 ### The demo in action
 
@@ -177,21 +177,24 @@ Follow this steps to run the demo:
 ![Image of server interface](resources/img/path.png) 
 
 7. Once the Path tool is placed in the world, if you switch to programming mode, you will see the different nodes for each tool.
-The Mission tool in the robot and the Path tool, both contain a Complex Data node. Additionally, the Path tool contains a regular node that can be used to open and close the enevelope programmatically.
+The Mission tool in the robot and the Path tool both contain a Complex Data node (triangle shaped). Additionally, the Path tool contains a regular node (circle shaped) that can be used to open and close the envelope programmatically.
 To learn more about envelopes, check our tutorial here: [Advanced Tool Tutorial: Envelopes (Part 1)](https://spatialtoolbox.vuforia.com/docs/tutorials/envelope-tool-tutorial-part-1)
-In order to allow the communication between the Path tool and the Mission tool in the robot, you have to connect their Complex Data nodes as follows (an explanation of Complex Data Nodes on the next section):
+In order to allow the communication between the Path tool and the Mission tool in the robot, you have to connect their Complex Data nodes as follows (an explanation of Complex Data Nodes on the next section). The direction of the connection matters; make sure to draw the line from the path node to the mission node.
 ![Image of server interface](resources/img/complexNode.png)
 
-8. Go back to the visualization mode and proceed to add your PathPoints to generate your path:
+8. Go back to the visualization mode and proceed to add your PathPoints to generate your path. If you tap and hold on a placed PathPoint for a second, you will be able to drag-and-drop it to a new location:
 ![Image of server interface](resources/img/pathpoints.png)
 
-9. Finally, add a virtual button from the pocket and connect it to the first Path Point in order to activate it. When you activate the first Path Point, the robot should immediatly move towards it.
+9. Finally, add a virtual button from the pocket and connect its programming node to the first Path Point in order to activate it. When you activate the first Path Point, the robot should immediatly move towards it.
 Once the robot has reached that first Path Point, the Path Point will send a signal and the next Path Point in the path will be activated. This will happen until the robot has reached the end of the Path.
 
 ### The Complex Data Node
 
 The Complex Data node is a special node that allows a more complex data structure to be sent between nodes.
-It is represented with a triangle instead of a circle.
+It is represented with a triangle instead of a circle. Most nodes just send a simple signal (a number ranging from 0 to 1) to their connections.
+Complex Data nodes have various data formats and can be used for more complex programming. For example, the Path node contains an array of locations.
+This array can be received by Mission nodes, which know how to process a list of locations into a format that a robot can read.
+You can't connect nodes of incompatible types: for example, you can't draw links from either of the triangle nodes to any of the circle nodes.
 
 ### Authors
 
@@ -202,19 +205,3 @@ See also the list of [contributors](https://github.com/ptcrealitylab/vuforia-spa
 ### License
 
 This project is licensed under the MPL 2.0 License - see the [LICENSE](https://github.com/ptcrealitylab/vuforia-spatial-robotic-addon/blob/master/LICENSE) file for details
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
