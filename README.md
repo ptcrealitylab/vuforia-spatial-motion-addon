@@ -1,7 +1,7 @@
 ---
 layout: doc
 title: Kinetic AR Motion Prototyping
-permalink: /docs/vuforia-spatial-motion-addon/README
+permalink: /docs/vuforia-spatial-motion-addon
 ---
 
 # vuforia-spatial-motion-addon
