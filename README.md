@@ -114,7 +114,7 @@ Now restart the server again.
 node server
 ```
 
-Go back to the browser interface, to ManageHardwareInterfaces and click on the yellow gear next to legoBoost for configuration.
+Go back to the browser interface, to ManageHardwareInterfaces and click on the yellow gear next to lego-boost-sse for configuration.
 You will see the configuration parameters for the Lego Boost robot as follows:
 
 ![Image of server interface](resources/img/legoboost_config.png) 
