@@ -24,7 +24,7 @@ sans-serif; font-size: 28px; color: white; padding: 32px;">
     var rendererWidth = screen.height;
     var rendererHeight = screen.width;
     var aspectRatio = rendererWidth / rendererHeight;
-    let cube;
+    let cube;   // A reference to the robot position in AR
 
     var isProjectionMatrixSet = false, isGroundPlaneFound = false;
 
@@ -122,7 +122,13 @@ sans-serif; font-size: 28px; color: white; padding: 32px;">
             
         });
     }
-    
+
+    /**
+     * This method anchors the robot reference to
+     * groundplane and sends the position and direction to the server.
+     * If your image target is set in a different position/orientation
+     * change this to adjust the coordinates for path planning
+     */
     function anchorToGroundPlane(){
         
         // Anchor object to groundplane
@@ -138,7 +144,6 @@ sans-serif; font-size: 28px; color: white; padding: 32px;">
         let data = {
             position : {x: cube.position.x, y: cube.position.z},
             direction : {x: lastDirection.x, y: lastDirection.z}
-        
         };
         
         // Send position and direction to hardware interface
@@ -159,18 +164,11 @@ sans-serif; font-size: 28px; color: white; padding: 32px;">
     function renderScene(modelViewMatrix, projectionMatrix) {
         lastProjectionMatrix = projectionMatrix;
         lastModelViewMatrix = modelViewMatrix;
-
-        // CHECK HERE WHEN THIS GETS CALLED
-        //console.log('lastProjectionMatrix: ', lastProjectionMatrix);
     }
 
     function groundPlaneCallback(groundPlaneMatrix, projectionMatrix){
 
         if (isProjectionMatrixSet) {
-
-            // CHECK HERE WHEN THIS GETS CALLED
-            //console.log('GroundPlane: ', groundPlaneMatrix);
-
             isGroundPlaneFound = true;
             setMatrixFromArray(groundplaneContainerObj.matrix, groundPlaneMatrix);  // update model view matrix
         }
@@ -189,12 +187,6 @@ sans-serif; font-size: 28px; color: white; padding: 32px;">
 
     // Draw the scene repeatedly
     render = function(_now) {
-        // now *= 0.001;  // convert to seconds
-        // const deltaTime = now - then;
-        // then = now;
-
-        // cube.rotation.x -= 0.2 * deltaTime;
-        // cube.rotation.y -= 0.2 * deltaTime;
 
         // only set the projection matrix for the camera 1 time, since it stays the same
         if (!isProjectionMatrixSet && lastProjectionMatrix && lastProjectionMatrix.length === 16) {
@@ -212,72 +204,9 @@ sans-serif; font-size: 28px; color: white; padding: 32px;">
 
             if (renderer && scene && camera) {
                 renderer.render(scene, camera);
-
             }
-
         }
-
     };
-
-    /*
-    let currentWorldId = null;
-      
-    spatialInterface.subscribeToWorldId(function(worldId) {
-        currentWorldId = worldId;
-    });
-      
-    setTimeout(function(){
-        spatialInterface.getPositionInWorld(function(worldMatrix, worldId) {
-            if (!worldMatrix || !currentWorldId) {
-                console.warn('tool is not localized against a world object, cannot write position to mission');
-            }
-      
-            console.log('sending position to server: ', 'storage', 'position', worldMatrix);
-            spatialInterface.writePublicData('storage', 'position',  worldMatrix);
-        });
-        }, 3000);
-          
-     
-    
-    function parseData(data) {
-        let worldObjectId = data.value.worldObject;
-        let pathEnvelopeId = data.value.address.tool;
-        let pathMode = data.value.mode; // "PATH" (in future could be "OPTIONS", "NAVIGATION", etc)
-        let path = data.value.path;
-        let listOfPointLists = path.map(function(item) {
-            return item.points;
-        });
-        let positions = [];
-        listOfPointLists.forEach(function(pointsList) {
-            pointsList.forEach(function(point) {
-                positions.push({
-                    speed: point.speed,
-                    x: point.matrix[12] / point.matrix[15],
-                    y: point.matrix[13] / point.matrix[15],
-                    z: point.matrix[14] / point.matrix[15]
-                })
-            });
-        });
-        console.log(worldObjectId, pathEnvelopeId, pathMode, positions);
-
-        
-        let text = '';
-        positions.forEach(function(pos, index) {
-          text += (index+1) + ': (' + pos.x.toFixed(1) + ', ' + pos.y.toFixed(1) + ', ' + pos.z.toFixed(1) + ')' + '<br>';
-          text += 'SPEED: ' + pos.speed + '<br><br>';
-        });
-  
-        // text += '<br>' + 'WORLD: ' + worldObjectId + '<br>' +
-        //   'ENVELOPE: ' + pathEnvelopeId + '<br>' +
-        //   'MODE: ' + pathMode + '<br>';
-  
-        document.getElementById('pathDisplay').innerHTML = text;
-        
-         
-
-    }
-    
-     */
 
 </script>
 </body>
