@@ -195,6 +195,8 @@ function startHardwareInterface() {
     server.addPublicDataListener(objectName, 'kineticAR', 'storage', 'calibration', function (data) {
 
         console.log('received data from mission tool: ', data);
+        
+        arStatus = data;
 
         lastPositionAR.x = data.position.x/groundPlaneScaleFactor;
         lastPositionAR.y = data.position.y/groundPlaneScaleFactor;
@@ -511,6 +513,61 @@ function processMissions(data){
     }
 }
 
+
+/**
+ * @desc This method will send the position of the robot in AR in realtime to the tool
+ */
+function sendRealtimeRobotPosition(){
+
+    let _currentOrientation_MIR = websocket.currentYaw();                       // Orientation of the robot at this frame in degrees (from WebSocket)
+    let _currentPosition_MIR = websocket.currentRobotPosition;                  // Position of the robot at this frame
+
+    let newARPosition = positionFromMIRToAR(_currentPosition_MIR, _currentOrientation_MIR);
+
+    //console.log('Send robot AR pos to path: ', newARPosition);
+    server.writePublicData(objectName, 'path', 'realtimepos', 'ARposition', newARPosition);    // Send newARPosition to frame
+}
+
+
+/**
+ * @desc Compute the position from the MIR robot map into the AR coordinate system
+ */
+function positionFromMIRToAR(newPosition, newDirectionAngle)
+{
+    let newARPosition = {x:0, y:0, z:0};
+
+    if (newDirectionAngle < 0) newDirectionAngle += 360;                                                    // newDirectionAngle between 0 - 360
+
+    let initialAngleMIR = initOrientationMIR;
+    if (initialAngleMIR < 0) initialAngleMIR += 360;                                                        // initialAngleMIR between 0 - 360
+    let initialRobotDirectionVectorMIR = [Math.cos(maths.degrees_to_radians(initialAngleMIR)),              // MIR space
+        Math.sin(maths.degrees_to_radians(initialAngleMIR))];
+
+    let from = [initPositionMIR.x, initPositionMIR.y];
+    let to = [newPosition.x, newPosition.y];
+
+    let newDistance = maths.distance(from, to);                                                             // Distance between points
+
+    let newDir = [to[0] - from[0], to[1] - from[1]];                                                        // newDirection = to - from
+    let newDirectionRad = maths.signed_angle(initialRobotDirectionVectorMIR, newDir);                       // Angle between initial direction and new direction
+
+    let angleDifference = newDirectionAngle - initialAngleMIR;                                              // Angle difference between current and initial MIR orientation
+
+    let _initialOrientation_AR = maths.signed_angle([arStatus.direction.x, arStatus.direction.y], [1,0]);   // Initial AR direction
+
+    if (_initialOrientation_AR < 0) _initialOrientation_AR += 2*Math.PI;                                    // _initialOrientation_AR between 0 - 360
+
+    let newARAngle = maths.radians_to_degrees(_initialOrientation_AR) + angleDifference;
+
+    let newAngleDeg = maths.radians_to_degrees(_initialOrientation_AR) + maths.radians_to_degrees(newDirectionRad);
+
+    newARPosition.x = (arStatus.position.x/groundPlaneScaleFactor) + (newDistance * Math.cos(maths.degrees_to_radians(newAngleDeg)));
+    newARPosition.y = - ((- arStatus.position.y/groundPlaneScaleFactor) + (newDistance * Math.sin(maths.degrees_to_radians(newAngleDeg))));
+    newARPosition.z = maths.degrees_to_radians(newARAngle);
+
+    return newARPosition;
+}
+
 /**
  * @desc Connect to websocket. If it fails, try to connect again. If success, continue with rest api requests
  * REST requests will only be triggered when WebSocket connection is successful
@@ -562,7 +619,7 @@ function requestStatus(){
  */
 function updateEvery(i, time) {
     setTimeout(() => {
-        //if (enableMIRConnection && initialSync) sendRealtimeRobotPosition();
+        if (enableMIRConnection && initialSync) sendRealtimeRobotPosition();
         updateEvery(++i, time);
     }, time)
 }
