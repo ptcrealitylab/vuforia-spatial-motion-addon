@@ -238,7 +238,7 @@ function parseData(data) {
                     id: pathPointId,
                     objectId: pathPointObjectId,
                     speed: point.speed,
-                    orientation: 180,
+                    orientation: 0,
                     x: point.matrix[12] / point.matrix[15],
                     y: (-1)*point.matrix[13] / point.matrix[15],
                     z: point.matrix[14] / point.matrix[15]
@@ -292,7 +292,7 @@ function addNodeListener(pathPointObjectKey, pathPointToolKey, pathPointNodeKey)
             // Send robot to this Path Point
             // Compute next boost movement
 
-            let missionData = computeMIRCoordinatesTo(pathData[index].x, pathData[index].y, pathData[index].orientation);
+            let missionData = computeMIRCoordinatesTo(pathData[index].x, pathData[index].z, pathData[index].orientation);
 
             console.log("missionData: ", missionData);
             
