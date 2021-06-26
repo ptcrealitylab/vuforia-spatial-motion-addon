@@ -15,9 +15,9 @@ let pins = {};
 let defaultPin;
 let robotTwin;
 
-let rendererWidth = screen.height; // width is height because landscape orientation
-let rendererHeight = screen.width; // height is width
-var aspectRatio = rendererWidth / rendererHeight;
+let rendererWidth;
+let rendererHeight;
+var aspectRatio;
 
 window.addEventListener('load', function() {
     if (!spatialInterface) {
@@ -27,8 +27,30 @@ window.addEventListener('load', function() {
 });
 
 // eslint-disable-next-line no-unused-vars
-function main() {
+main = function() {
+    spatialInterface.onRealityInterfaceLoaded(function() {
+        spatialInterface.getScreenDimensions(function(width, height) {
+            document.body.width = width + 'px';
+            document.body.height = height + 'px';
+            rendererWidth = width;
+            rendererHeight = height;
+            aspectRatio = rendererWidth / rendererHeight;
 
+            screenWidth = width;
+            screenHeight = height;
+            canvas.width = screenWidth + 'px';
+            canvas.height = screenHeight + 'px';
+            canvas.style.width = screenWidth + 'px';
+            canvas.style.height = screenHeight + 'px';
+
+            spatialInterface.changeFrameSize(width, height);
+
+            init();
+        });
+    });
+};
+
+function init() {
     realRenderer = new THREE.WebGLRenderer( { alpha: true } );
     realRenderer.debug.checkShaderErrors = false;
     realRenderer.setPixelRatio(window.devicePixelRatio);
@@ -157,17 +179,6 @@ let lastProjectionMatrix = null;
 let lastModelViewMatrix = null;
 
 spatialInterface.onRealityInterfaceLoaded(function() {
-
-    spatialInterface.getScreenDimensions(function(width, height) {
-        screenWidth = width;
-        screenHeight = height;
-        canvas.width = screenWidth + 'px';
-        canvas.height = screenHeight + 'px';
-        canvas.style.width = screenWidth + 'px';
-        canvas.style.height = screenHeight + 'px';
-
-        //spatialInterface.changeFrameSize(width, height);
-    });
 
     // Add listener to receive robot position in AR coordinates
     spatialInterface.initNode('realtimepos', 'storeData', 0, 0);

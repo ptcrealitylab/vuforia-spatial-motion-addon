@@ -21,9 +21,9 @@ sans-serif; font-size: 28px; color: white; padding: 32px;">
     let realRenderer, renderer;
     var camera, scene;
     var mainContainerObj, groundplaneContainerObj;
-    var rendererWidth = screen.height;
-    var rendererHeight = screen.width;
-    var aspectRatio = rendererWidth / rendererHeight;
+    var rendererWidth;
+    var rendererHeight;
+    var aspectRatio;
     let cube;   // A reference to the robot position in AR
 
     var isProjectionMatrixSet = false, isGroundPlaneFound = false;
@@ -31,8 +31,25 @@ sans-serif; font-size: 28px; color: white; padding: 32px;">
     let spatialInterface = new SpatialInterface();
     spatialInterface.useWebGlWorker();
 
-    
-    function main() {
+
+    main = function() {
+
+      spatialInterface.onRealityInterfaceLoaded(function() {
+        spatialInterface.getScreenDimensions(function(width, height) {
+          document.body.width = width + 'px';
+          document.body.height = height + 'px';
+          rendererWidth = width;
+          rendererHeight = height;
+          aspectRatio = rendererWidth / rendererHeight;
+
+          spatialInterface.changeFrameSize(width, height);
+
+          init();
+        });
+      });
+    };
+
+    function init() {
         
         realRenderer = new THREE.WebGLRenderer({alpha: true});
         realRenderer.setPixelRatio(window.devicePixelRatio);
@@ -103,15 +120,6 @@ sans-serif; font-size: 28px; color: white; padding: 32px;">
         scene.add(dirLight2);*/
 
         spatialInterface.onSpatialInterfaceLoaded(function() {
-
-            spatialInterface.getScreenDimensions(function (width, height) {
-                document.body.width = width + 'px';
-                document.body.height = height + 'px';
-                rendererWidth = width;
-                rendererHeight = height;
-                renderer.setSize(rendererWidth, rendererHeight);
-                spatialInterface.changeFrameSize(width, height);
-            });
 
             spatialInterface.initNode('mission', 'mission', 0, -100, 1.5);
             spatialInterface.initNode('storage', 'storeData', 0, 0);
