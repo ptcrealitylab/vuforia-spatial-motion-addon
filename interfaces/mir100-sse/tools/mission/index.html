@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <title>Default UI</title>
+
+    <link rel="stylesheet" href="resources/main.css">
+    
     <script src="object.js"></script>
     <script src="objectDefaultFiles/gl-worker.js"></script>
     
@@ -16,7 +19,10 @@ sans-serif; font-size: 28px; color: white; padding: 32px;">
 
 </div>-->
 
+
 <script>
+
+    generateUI();
 
     let realRenderer, renderer;
     var camera, scene;
@@ -25,6 +31,7 @@ sans-serif; font-size: 28px; color: white; padding: 32px;">
     var rendererHeight;
     var aspectRatio;
     let cube;   // A reference to the robot position in AR
+    let robotTwin;
 
     var isProjectionMatrixSet = false, isGroundPlaneFound = false;
 
@@ -48,6 +55,31 @@ sans-serif; font-size: 28px; color: white; padding: 32px;">
         });
       });
     };
+    
+    function generateUI(){
+        
+        // Create button for robot calibration reset
+        
+        let domElement = document.createElement('div');
+        let resetButton = document.createElement('button');
+        resetButton.id = 'resetButton';
+        domElement.appendChild( resetButton );
+        document.body.appendChild(domElement);
+        resetButton.addEventListener('pointerdown', onReset, false);
+    }
+    
+    function onReset(event){
+        
+        // Reset tool position to robot object
+        mainContainerObj.attach( cube );
+        cube.position.set(320,-440,-520);
+        cube.rotation.set(0,0,0);
+        cube.scale.set(2,2,2);
+
+        // Anchor to groundplane and send new position to server
+        anchorToGroundPlane();
+
+    }
 
     function init() {
         
@@ -80,9 +112,21 @@ sans-serif; font-size: 28px; color: white; padding: 32px;">
         groundplaneContainerObj.name = 'groundPlaneContainer';
         scene.add(groundplaneContainerObj);
 
+        let textureRobotMarker = new THREE.TextureLoader().load( 'resources/textures/robotMarker2.png' );
+        let geometryMarker = new THREE.PlaneGeometry( 600, 600, 32 );
+        let materialMarker = new THREE.MeshBasicMaterial( {map: textureRobotMarker, color: 0xffffff, side: THREE.DoubleSide, transparent: true} );
+
+        robotTwin = new THREE.Mesh( geometryMarker, materialMarker );
+        robotTwin.rotateX(Math.PI/2);
+        //robotTwin.position.y += 100;
+
+        groundplaneContainerObj.add(robotTwin);
+        robotTwin.position.set(0, 0, 0);
+
         let geometrycube = new THREE.BoxGeometry( 20, 20, 20 );
         let material = new THREE.MeshBasicMaterial( {color: 0xffffff} );
         cube = new THREE.Mesh( geometrycube, material );
+        cube.name = 'cube';
         mainContainerObj.add( cube );
         cube.position.set(320,-440,-520);
         cube.scale.set(2,2,2);
@@ -130,12 +174,42 @@ sans-serif; font-size: 28px; color: white; padding: 32px;">
 
             // whenever we receive new matrices from the editor, update the 3d scene
             spatialInterface.addMatrixListener(renderScene);
-            spatialInterface.setMoveDelay(10);
+            //spatialInterface.setMoveDelay(10);
             spatialInterface.addGroundPlaneMatrixListener(groundPlaneCallback);
+
+            spatialInterface.ignoreAllTouches(true);
+            spatialInterface.setMoveDelay(-1);
             
             setTimeout(anchorToGroundPlane, 2000);
+
+            spatialInterface.addReadPublicDataListener('realtimepos', 'ARposition', function (data) {
+
+                //console.log('RECEIVED ROBOT POSITION IN PATH: ', data);
+
+                moveDummyRobot(data);
+
+            });
             
         });
+    }
+
+    /**
+     ** Method to update realtime Robot dummy in frame
+     ** data that comes from server:
+     **      data.x, data.y          - realtime MIR AR position
+     **      data.z                  - realtime MIR AR orientation
+     */
+    function moveDummyRobot(data){
+
+        //robotTwin.position.set(-200, 0, 0);
+
+        if (robotTwin != null){
+            let newPosition = new THREE.Vector3(data.x * 1000, 0, data.y * 1000);
+            robotTwin.position.set(newPosition.x, newPosition.y , newPosition.z);
+            robotTwin.rotation.set(robotTwin.rotation.x, robotTwin.rotation.y, (-1) * data.z);
+            //robotTwin.rotation.set(Math.PI/2, data.z, 0);
+            robotTwin.updateMatrix();
+        }
     }
 
     /**
@@ -148,8 +222,6 @@ sans-serif; font-size: 28px; color: white; padding: 32px;">
         
         // Anchor object to groundplane
         groundplaneContainerObj.attach(cube);
-        cube.name = 'cube';
-        console.log(cube);
 
         // Send initial position and direction of object to hardware interface
         

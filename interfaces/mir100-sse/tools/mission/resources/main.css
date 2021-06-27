@@ -1,0 +1,16 @@
+body {
+    margin: auto;
+    color: white;
+    overflow: hidden;
+    background-color: transparent;
+}
+
+#resetButton {
+    position: absolute;
+    background: url('textures/reset.png');
+    background-size: 100%;
+    bottom: 10px;
+    left: 10px;
+    width: 60px;
+    height: 60px;
+}

@@ -183,7 +183,8 @@ function startHardwareInterface() {
     server.setTool(objectName, 'kineticAR', 'mission', __dirname);
 
     server.addReadListener(objectName, 'kineticAR', 'mission', function(data) {            // Add listener to node
-        //console.log('Data from Mission Node', data);
+        
+        console.log('Data from Mission Node', data);
 
         //console.log(data);
         if (data.mode === 'c' && data.unit === 'path') {
@@ -192,9 +193,12 @@ function startHardwareInterface() {
 
     });
 
+    server.addNode(objectName, 'kineticAR', 'realtimepos', 'storeData');     // Node for realtime robot position data
+
+
     server.addPublicDataListener(objectName, 'kineticAR', 'storage', 'calibration', function (data) {
 
-        console.log('received data from mission tool: ', data);
+        console.log('Received data from mission tool: ', data);
         
         arStatus = data;
 
@@ -213,6 +217,7 @@ function startHardwareInterface() {
         console.log("LAST POSITION AR: ", lastPositionAR);              //       { x: -332.3420, y: 482.1173, z: 1749.54107 }
         console.log("LAST DIRECTION AR: ", lastDirectionAR);            //       { x: -0.84, y: -0.00424 }
         console.log('initOrientation: ', initOrientationAR);
+        console.log('***********************************************************************************************************');
 
     });
 
@@ -525,7 +530,7 @@ function sendRealtimeRobotPosition(){
     let newARPosition = positionFromMIRToAR(_currentPosition_MIR, _currentOrientation_MIR);
 
     //console.log('Send robot AR pos to path: ', newARPosition);
-    server.writePublicData(objectName, 'path', 'realtimepos', 'ARposition', newARPosition);    // Send newARPosition to frame
+    server.writePublicData(objectName, 'kineticAR', 'realtimepos', 'ARposition', newARPosition);    // Send newARPosition to frame
 }
 
 

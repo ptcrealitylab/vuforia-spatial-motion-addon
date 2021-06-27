@@ -13,7 +13,6 @@ let isProjectionMatrixSet = false;
 let currentWorldId = null;
 let pins = {};
 let defaultPin;
-let robotTwin;
 
 let rendererWidth;
 let rendererHeight;
@@ -79,17 +78,6 @@ function init() {
     groundPlaneContainerObj.matrixAutoUpdate = false;
     scene.add(groundPlaneContainerObj);
     groundPlaneContainerObj.name = 'groundPlaneContainerObj';
-
-    let textureRobotMarker = new THREE.TextureLoader().load( 'resources/robotMarker2.png' );
-    let geometryMarker = new THREE.PlaneGeometry( 600, 600, 32 );
-    let materialMarker = new THREE.MeshBasicMaterial( {map: textureRobotMarker, color: 0xffffff, side: THREE.DoubleSide, transparent: true} );
-
-    robotTwin = new THREE.Mesh( geometryMarker, materialMarker );
-    robotTwin.rotateX(Math.PI/2);
-    //robotTwin.position.y += 100;
-    
-    groundPlaneContainerObj.add(robotTwin);
-    robotTwin.position.set(0, 0, 0);
     
     let textureArrow = new THREE.TextureLoader().load('resources/pathArrow2.png');
     splineRenderer = new SplineRender(groundPlaneContainerObj, textureArrow);
@@ -180,15 +168,6 @@ let lastModelViewMatrix = null;
 
 spatialInterface.onRealityInterfaceLoaded(function() {
 
-    // Add listener to receive robot position in AR coordinates
-    spatialInterface.initNode('realtimepos', 'storeData', 0, 0);
-    spatialInterface.addReadPublicDataListener('realtimepos', 'ARposition', function (data) {
-
-        console.log('RECEIVED ROBOT POSITION IN PATH: ', data);
-
-        moveDummyRobot(data);
-
-    });
 
     spatialInterface.initNode('path', 'path', 0, 0);
     spatialInterface.sendMoveNode('open', 0, 200); // move auto-generated envelope node to new position
@@ -226,25 +205,6 @@ spatialInterface.onRealityInterfaceLoaded(function() {
         currentWorldId = worldId;
     });
 });
-
-
-/**
- ** Method to update realtime Robot dummy in frame
- ** data that comes from server:
- **      data.x, data.y          - realtime MIR AR position
- **      data.z                  - realtime MIR AR orientation
- */
-function moveDummyRobot(data){
-
-    robotTwin.position.set(200, 0, 0);
-    
-    /*if (robotTwin != null){
-        let newPosition = new THREE.Vector3(data.x * 1000, 0 , data.y * 1000);
-        robotTwin.position.set(newPosition.x, newPosition.y , newPosition.z);
-        robotTwin.rotation.set(robotTwin.rotation.x, data.z, robotTwin.rotation.z);
-        robotTwin.updateMatrix();
-    }*/
-}
 
 
 function renderIcon(distance, forceRender) {

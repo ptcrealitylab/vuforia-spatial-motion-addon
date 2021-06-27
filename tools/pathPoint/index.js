@@ -30,6 +30,14 @@ var mouse = new THREE.Vector2();
 
 let toolScale = 1.0;
 
+document.addEventListener('pointerup', onPointerUp);
+
+function onPointerUp(){
+    setTimeout(function() {
+        updatePositionServer();
+    }, 1000);   // This is needed to avoid the initial setup frames where matrices are empty
+}
+
 if (!spatialInterface) {
     spatialInterface = new SpatialInterface();
     spatialInterface.useWebGlWorker();
@@ -155,9 +163,11 @@ function init() {
             }
         });
     });
+    
+    
 
     setTimeout(function() {
-        updatePositionServer();
+        //updatePositionServer();
         initPathPointAlignment();
     }, 1000);   // This is needed to avoid the initial setup frames where matrices are empty
 
@@ -433,6 +443,7 @@ function initPathPointAlignment() {
 }
 
 function alignPathPointToGroundPlane() {
+    gp_aligned = true;
     // Align the checkpoint to the groundplane up vector
     
     groundplaneContainerObj.attach(pathPointMesh);
@@ -450,7 +461,7 @@ function alignPathPointToGroundPlane() {
             loop.stop();
 
             mainContainerObj.attach(pathPointMesh);
-            gp_aligned = true;
+            //gp_aligned = true;
 
             //addAxisHelpers();
 
@@ -558,7 +569,7 @@ function updateHeighLineAndMeshBlend() {
     const geometry = new THREE.Geometry();
     geometry.vertices = positionsArray;
     heighlineMeshLine.setGeometry(geometry);
-    console.log(heighlineMeshLine);
+    //console.log(heighlineMeshLine);
     
     // MESH BLENDING
     
@@ -653,6 +664,7 @@ render = function(_now) {
 
             updateShadow();
             updateHeighLineAndMeshBlend();
+            if (!gp_aligned) alignPathPointToGroundPlane();
 
             if (needsCanvasOrderUpdate) {
                 updateCanvasIndex();
