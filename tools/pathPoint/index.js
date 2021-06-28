@@ -445,10 +445,13 @@ function reattachPathPointToGroundPlane() {
     pathPointMesh.position.y = 0;
     pathPointMesh.position.z = 0;
     groundPlaneContainerObj.attach(pathPointMesh);
+    pathPointMesh.rotation.x = 0;
+    pathPointMesh.rotation.y = 0;
+    pathPointMesh.rotation.z = 0;
 }
 
 function alignPathPointToGroundPlane() {
-    gp_aligned = true;
+    //gp_aligned = true;
     // Align the checkpoint to the groundplane up vector
     
     groundplaneContainerObj.attach(pathPointMesh);
@@ -669,7 +672,7 @@ render = function(_now) {
 
             updateShadow();
             updateHeighLineAndMeshBlend();
-            if (!gp_aligned) alignPathPointToGroundPlane();
+            //if (!gp_aligned) alignPathPointToGroundPlane();
 
             if (needsCanvasOrderUpdate) {
                 updateCanvasIndex();
