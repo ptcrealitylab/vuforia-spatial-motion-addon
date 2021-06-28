@@ -423,6 +423,10 @@ function groundPlaneCallback(groundPlaneMatrix, _projectionMatrix) {
 
         isGroundPlaneFound = true;
         setMatrixFromArray(groundplaneContainerObj.matrix, groundPlaneMatrix);  // update model view matrix
+
+        if (gp_aligned) {
+            reattachPathPointToGroundPlane();
+        }
     }
 }
 
@@ -433,6 +437,14 @@ function initPathPointAlignment() {
 
     if (isGroundPlaneFound) alignPathPointToGroundPlane();
 
+}
+
+function reattachPathPointToGroundPlane() {
+    mainContainerObj.attach(pathPointMesh);
+    pathPointMesh.position.x = 0;
+    pathPointMesh.position.y = 0;
+    pathPointMesh.position.z = 0;
+    groundPlaneContainerObj.attach(pathPointMesh);
 }
 
 function alignPathPointToGroundPlane() {
@@ -453,8 +465,8 @@ function alignPathPointToGroundPlane() {
             if (debugPathPoint) console.log('finished alignment');
             loop.stop();
 
-            mainContainerObj.attach(pathPointMesh);
-            //gp_aligned = true;
+            reattachPathPointToGroundPlane();
+            gp_aligned = true;
 
             //addAxisHelpers();
 
