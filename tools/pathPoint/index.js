@@ -50,21 +50,16 @@ if (!spatialInterface) {
 // });
 
 // eslint-disable-next-line no-unused-vars
-main = function() {
+main = function({width, height}) {
+    document.body.width = width + 'px';
+    document.body.height = height + 'px';
+    rendererWidth = width;
+    rendererHeight = height;
+    aspectRatio = rendererWidth / rendererHeight;
 
-    spatialInterface.onRealityInterfaceLoaded(function() {
-        spatialInterface.getScreenDimensions(function(width, height) {
-            document.body.width = width + 'px';
-            document.body.height = height + 'px';
-            rendererWidth = width;
-            rendererHeight = height;
-            aspectRatio = rendererWidth / rendererHeight;
+    spatialInterface.changeFrameSize(width, height);
 
-            spatialInterface.changeFrameSize(width, height);
-
-            init();
-        });
-    });
+    init();
 };
 
 function init() {
@@ -428,6 +423,10 @@ function groundPlaneCallback(groundPlaneMatrix, _projectionMatrix) {
 
         isGroundPlaneFound = true;
         setMatrixFromArray(groundplaneContainerObj.matrix, groundPlaneMatrix);  // update model view matrix
+
+        if (gp_aligned) {
+            reattachPathPointToGroundPlane();
+        }
     }
 }
 
@@ -438,6 +437,14 @@ function initPathPointAlignment() {
 
     if (isGroundPlaneFound) alignPathPointToGroundPlane();
 
+}
+
+function reattachPathPointToGroundPlane() {
+    mainContainerObj.attach(pathPointMesh);
+    pathPointMesh.position.x = 0;
+    pathPointMesh.position.y = 0;
+    pathPointMesh.position.z = 0;
+    groundPlaneContainerObj.attach(pathPointMesh);
 }
 
 function alignPathPointToGroundPlane() {
@@ -458,8 +465,8 @@ function alignPathPointToGroundPlane() {
             if (debugPathPoint) console.log('finished alignment');
             loop.stop();
 
-            mainContainerObj.attach(pathPointMesh);
-            //gp_aligned = true;
+            reattachPathPointToGroundPlane();
+            gp_aligned = true;
 
             //addAxisHelpers();
 
