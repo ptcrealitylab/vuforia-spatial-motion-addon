@@ -26,27 +26,23 @@ window.addEventListener('load', function() {
 });
 
 // eslint-disable-next-line no-unused-vars
-main = function() {
-    spatialInterface.onRealityInterfaceLoaded(function() {
-        spatialInterface.getScreenDimensions(function(width, height) {
-            document.body.width = width + 'px';
-            document.body.height = height + 'px';
-            rendererWidth = width;
-            rendererHeight = height;
-            aspectRatio = rendererWidth / rendererHeight;
+main = function({width, height}) {
+    document.body.width = width + 'px';
+    document.body.height = height + 'px';
+    rendererWidth = width;
+    rendererHeight = height;
+    aspectRatio = rendererWidth / rendererHeight;
 
-            screenWidth = width;
-            screenHeight = height;
-            canvas.width = screenWidth + 'px';
-            canvas.height = screenHeight + 'px';
-            canvas.style.width = screenWidth + 'px';
-            canvas.style.height = screenHeight + 'px';
+    screenWidth = width;
+    screenHeight = height;
+    canvas.width = screenWidth + 'px';
+    canvas.height = screenHeight + 'px';
+    canvas.style.width = screenWidth + 'px';
+    canvas.style.height = screenHeight + 'px';
 
-            spatialInterface.changeFrameSize(width, height);
+    spatialInterface.changeFrameSize(width, height);
 
-            init();
-        });
-    });
+    init();
 };
 
 function init() {
