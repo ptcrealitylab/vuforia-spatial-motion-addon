@@ -33,9 +33,7 @@ let toolScale = 1.0;
 document.addEventListener('pointerup', onPointerUp);
 
 function onPointerUp(){
-    setTimeout(function() {
-        updatePositionServer();
-    }, 1000);   // This is needed to avoid the initial setup frames where matrices are empty
+    updatePositionServer();
 }
 
 if (!spatialInterface) {
