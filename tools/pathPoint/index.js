@@ -680,5 +680,4 @@ render = function(_now) {
             }
         }
     }
-
 };

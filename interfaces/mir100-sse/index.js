@@ -499,7 +499,7 @@ function processStatus(data) {
                 break;
 
             case 11:    // manual control
-                console.log("mir100-sse: MANUAL CONTROL");
+                //console.log("mir100-sse: MANUAL CONTROL");
                 break;
             default:
                 break;
@@ -528,6 +528,10 @@ function sendRealtimeRobotPosition(){
     let _currentPosition_MIR = websocket.currentRobotPosition;                  // Position of the robot at this frame
 
     let newARPosition = positionFromMIRToAR(_currentPosition_MIR, _currentOrientation_MIR);
+    
+    //let robotPositionMatrix = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, newARPosition.x * 1000, newARPosition.y * 1000, 0, 1];
+    //console.log('writeObjectPosition from mir100-sse')
+    //server.writeObjectPosition(objectName, robotPositionMatrix);
 
     //console.log('Send robot AR pos to path: ', newARPosition);
     server.writePublicData(objectName, 'kineticAR', 'realtimepos', 'ARposition', newARPosition);    // Send newARPosition to frame
