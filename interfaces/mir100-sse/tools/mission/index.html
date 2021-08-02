@@ -30,7 +30,8 @@ sans-serif; font-size: 28px; color: white; padding: 32px;">
     var rendererWidth;
     var rendererHeight;
     var aspectRatio;
-    let cube;   // A reference to the robot position in AR
+    let robotCenterAxis;   // A reference to the robot position in AR
+    let currentRobotCenterAxis;
     let robotTwin;
 
     var isProjectionMatrixSet = false, isGroundPlaneFound = false;
@@ -65,16 +66,26 @@ sans-serif; font-size: 28px; color: white; padding: 32px;">
         resetButton.id = 'resetButton';
         domElement.appendChild( resetButton );
         document.body.appendChild(domElement);
-        resetButton.addEventListener('pointerdown', onReset, false);
+        resetButton.addEventListener('pointerdown', resetClicked, false);
     }
     
-    function onReset(event){
+    function resetClicked(event){
+        spatialInterface.writePublicData('realtimepos', 'resetObjectPosition', Math.random());
+        onReset();
+    }
+    
+    function onReset(){
+        
+        console.log('RESET ROBOT POSITION');
         
         // Reset tool position to robot object
-        mainContainerObj.attach( cube );
-        cube.position.set(320,-440,-520);
-        cube.rotation.set(0,0,0);
-        cube.scale.set(2,2,2);
+        mainContainerObj.attach( robotCenterAxis );
+        //robotCenterAxis.position.set(320,-440,-520);
+        robotCenterAxis.position.set(0,350,0);
+        robotCenterAxis.position.set(0,0,0);
+        robotCenterAxis.rotation.set(0,0,0);
+        robotCenterAxis.scale.set(2,2,2);
+        robotCenterAxis.updateMatrix();
 
         // Anchor to groundplane and send new position to server
         anchorToGroundPlane();
@@ -123,45 +134,27 @@ sans-serif; font-size: 28px; color: white; padding: 32px;">
         groundplaneContainerObj.add(robotTwin);
         robotTwin.position.set(0, 0, 0);
 
-        let geometrycube = new THREE.BoxGeometry( 20, 20, 20 );
-        let material = new THREE.MeshBasicMaterial( {color: 0xffffff} );
-        cube = new THREE.Mesh( geometrycube, material );
-        cube.name = 'cube';
-        mainContainerObj.add( cube );
-        cube.position.set(320,-440,-520);
-        cube.scale.set(2,2,2);
-
+        robotCenterAxis = generateAxis(1);
+        robotCenterAxis.name = 'robotCenterAxis';
+        mainContainerObj.add( robotCenterAxis );
+        //robotCenterAxis.position.set(320,-440,-520);
+        robotCenterAxis.position.set(0,350,0);
+        robotCenterAxis.position.set(0,0,0);
+        robotCenterAxis.scale.set(2,2,2);
         
-        let material2 = new THREE.MeshBasicMaterial( {color: 0xff0000} );
-        let cube2 = new THREE.Mesh( geometrycube, material2 ); // red = x
-        let material3 = new THREE.MeshBasicMaterial( {color: 0x00ff00} );
-        let cube3 = new THREE.Mesh( geometrycube, material3 ); // green = y
-        let material4 = new THREE.MeshBasicMaterial( {color: 0x0000ff} );
-        let cube4 = new THREE.Mesh( geometrycube, material4 ); // blue = z
-        
-        cube.add(cube2);
-        cube.add(cube3);
-        cube.add(cube4);
-
-        cube2.position.set(50,0,0); // red
-        cube3.position.set(0,50,0); // green
-        cube4.position.set(0, 0,50); // blue
+        // We create a ghost of the robot that will always be positioned at the position of the tool
+        /*currentRobotCenterAxis = generateAxis(3);
+        currentRobotCenterAxis.name = 'currentRobotCenterAxis';
+        mainContainerObj.add( currentRobotCenterAxis );
+        currentRobotCenterAxis.position.set(0,0,0);
+        currentRobotCenterAxis.scale.set(2,2,2);*/
         
         // GroundPlane Origin
-        let gp_cube = cube.clone();
+        let gp_cube = generateAxis(2);
+        
         groundplaneContainerObj.add(gp_cube);
         gp_cube.rotation.set(0,0,0);
         gp_cube.position.set(0,0,0);
-        
-        // light the scene with a combination of ambient and directional white light
-        /*var ambLight = new THREE.AmbientLight(0x404040);
-        scene.add(ambLight);
-        var dirLight1 = new THREE.DirectionalLight(0xffffff, 1);
-        dirLight1.position.set(100, 100, 100);
-        scene.add(dirLight1);
-        var dirLight2 = new THREE.DirectionalLight(0xffffff, 0.5);
-        dirLight2.position.set(-100, -100, -100);
-        scene.add(dirLight2);*/
 
         spatialInterface.onSpatialInterfaceLoaded(function() {
 
@@ -177,20 +170,70 @@ sans-serif; font-size: 28px; color: white; padding: 32px;">
             //spatialInterface.setMoveDelay(10);
             spatialInterface.addGroundPlaneMatrixListener(groundPlaneCallback);
 
-            spatialInterface.ignoreAllTouches(true);
+            //spatialInterface.ignoreAllTouches(true);
             spatialInterface.setMoveDelay(-1);
             
             setTimeout(anchorToGroundPlane, 2000);
 
             spatialInterface.addReadPublicDataListener('realtimepos', 'ARposition', function (data) {
 
-                //console.log('RECEIVED ROBOT POSITION IN PATH: ', data);
-
                 moveDummyRobot(data);
 
             });
             
+            // Method to reset the object position in either the remote operator or the toolbox when we press the reset button on the other one
+            spatialInterface.addReadPublicDataListener('realtimepos', 'resetObjectPosition', function (data) {
+
+                onReset();
+
+            });
+            
         });
+    }
+    
+    function generateAxis(paletteChoice){
+        
+        let palette1 = [new THREE.Color( 0xff0000 ), new THREE.Color( 0x00ff00 ), new THREE.Color( 0x0000ff )];
+        let palette2 = [new THREE.Color( 0xffff00 ), new THREE.Color( 0x00ffff ), new THREE.Color( 0xff00ff )];
+        let palette3 = [new THREE.Color( 0x6FAAF7 ), new THREE.Color( 0xD7F757 ), new THREE.Color( 0xF7513E )];
+        
+        let palette = null;
+        
+        switch (paletteChoice) {
+            case 1:
+                palette = palette1;
+                break;
+            case 2:
+                palette = palette2;
+                break;
+            case 3:
+                palette = palette3;
+                break;
+            default:
+                palette = palette1;
+                break;
+        }
+        
+        let geometrycube = new THREE.BoxGeometry( 20, 20, 20 );
+        let material = new THREE.MeshBasicMaterial( {color: 0xffffff} );
+        let axis = new THREE.Mesh( geometrycube, material );
+
+        /*let material2 = new THREE.MeshBasicMaterial( {color: palette[0]} );
+        let axis1 = new THREE.Mesh( geometrycube, material2 ); // red = x
+        let material3 = new THREE.MeshBasicMaterial( {color: palette[1]} );
+        let axis2 = new THREE.Mesh( geometrycube, material3 ); // green = y
+        let material4 = new THREE.MeshBasicMaterial( {color: palette[2]} );
+        let axis3 = new THREE.Mesh( geometrycube, material4 ); // blue = z
+
+        axis1.position.set(50,0,0); // red
+        axis2.position.set(0,50,0); // green
+        axis3.position.set(0, 0,50); // blue
+        
+        axis.add(axis1);
+        axis.add(axis2);
+        axis.add(axis3);*/
+        
+        return axis;
     }
 
     /**
@@ -221,17 +264,17 @@ sans-serif; font-size: 28px; color: white; padding: 32px;">
     function anchorToGroundPlane(){
         
         // Anchor object to groundplane
-        groundplaneContainerObj.attach(cube);
+        groundplaneContainerObj.attach(robotCenterAxis);
 
         // Send initial position and direction of object to hardware interface
         
         let lastDirection = new THREE.Vector3(0,-1,0);      // The up? vector of the cube is pointing towards the front of the robot
         
-        lastDirection.applyQuaternion( cube.quaternion );
+        lastDirection.applyQuaternion( robotCenterAxis.quaternion );
         console.log('lastdirection: ', lastDirection);
         
         let data = {
-            position : {x: cube.position.x, y: cube.position.z},
+            position : {x: robotCenterAxis.position.x, y: robotCenterAxis.position.z},
             direction : {x: lastDirection.x, y: lastDirection.z}
         };
         
@@ -290,12 +333,36 @@ sans-serif; font-size: 28px; color: white; padding: 32px;">
             setMatrixFromArray(mainContainerObj.matrix, lastModelViewMatrix);
             // render the scene
             mainContainerObj.visible = true;
+            
+            /*
+            if (farFromLastTracking()){
+                resetClicked();
+            }*/
 
             if (renderer && scene && camera) {
                 renderer.render(scene, camera);
             }
         }
     };
+    
+    function farFromLastTracking(){
+        // Distance from robotCenterAxis in GroundPlane to currentRobotCenterAxis
+        
+        let isFar = false;
+        
+        let robotCenterAxisPos = new THREE.Vector3();
+        robotCenterAxis.getWorldPosition(robotCenterAxisPos);
+
+        let currentRobotCenterAxisPos = new THREE.Vector3();
+        currentRobotCenterAxis.getWorldPosition(currentRobotCenterAxisPos);
+        
+        if (robotCenterAxisPos.distanceTo(currentRobotCenterAxisPos) > 100){
+            isFar = true;
+        }
+        
+        return isFar;
+        
+    }
 
 </script>
 </body>

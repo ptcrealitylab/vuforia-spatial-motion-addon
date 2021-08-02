@@ -289,67 +289,71 @@ function addNodeListener(pathPointObjectKey, pathPointToolKey, pathPointNodeKey)
         let index = pathData.indexOf(pathData.find(pd => pd.id === pathPointToolKey));
 
         console.log('PathPoint triggered in path: ', index);
-
-        if (data.value === 1){
-
-            pathPointTriggered = pathPointToolName;
-            currentIndexInPath = index;
-
-            // The node for this Path Point has been activated
-            // Send robot to this Path Point
-            // Compute next boost movement
-
-            let missionData = computeMIRCoordinatesTo(pathData[index].x, pathData[index].z, pathData[index].orientation);
-
-            console.log("missionData: ", missionData);
+        
+        if (!inMotion){
             
-            let newAddress = restAddress + "/mission_queue";
+            if (data.value === 1){
 
-            if (enableMIRConnection) {
-                restapi.postData(newAddress, missionData)
-                    .then(res => console.log(res))          // JSON-string from `response.json()` call
-                    .catch(error => console.error(error));
-            }
 
-            inMotion = true;
+                pathPointTriggered = pathPointToolName;
+                currentIndexInPath = index;
 
-        } else if (data.value === 0) {
-            
-            console.log('0 received in pathpoint: ', pathPointToolName);
+                // The node for this Path Point has been activated
+                // Send robot to this Path Point
 
-            // The node for this Path Point has been deactivated
-            if (pathPointTriggered === pathPointToolName) {
-                
-                console.log('The node for this Path Point has been deactivated');
+                let missionData = computeMIRCoordinatesTo(pathData[index].x, pathData[index].z, pathData[index].orientation);
 
-                // We reached this path point, we need to go to the next path point in path
+                console.log("missionData: ", missionData);
 
-                if (index + 1 < pathData.length){                      // Next checkpoint in same path
+                let newAddress = restAddress + "/mission_queue";
 
-                    // We need to find the id for the node on the next path point to trigger it
-                    nodeUtilities.searchNodeByType('node', pathData[index + 1].objectId, pathData[index + 1].id, null, function (objectKey, toolKey, newNodeKey){
+                if (enableMIRConnection) {
+                    restapi.postData(newAddress, missionData)
+                        .then(res => console.log(res))          // JSON-string from `response.json()` call
+                        .catch(error => console.error(error));
+                }
 
-                        console.log('Found node in next pathpoint: ', objectKey, toolKey, newNodeKey);
+                inMotion = true;
 
-                        let objectName = server.getObjectNameFromObjectId(objectKey);
-                        let toolName = server.getToolNameFromToolId(objectKey, toolKey);
-                        let newNodeName = server.getNodeNameFromNodeId(objectKey, toolKey, newNodeKey);
+            } else if (data.value === 0) {
 
-                        server.write(objectName, toolName, newNodeName, 1);
-                    });
+                console.log('0 received in pathpoint: ', pathPointToolName);
 
-                } else {    // We reached end of path
+                // The node for this Path Point has been deactivated
+                if (pathPointTriggered === pathPointToolName) {
 
-                    console.log('REACHED END OF PATH');
+                    console.log('The node for this Path Point has been deactivated');
 
-                    pathPointTriggered = null;
-                    currentIndexInPath = null;
+                    // We reached this path point, we need to go to the next path point in path
 
-                    // Do something here after end of path reached...
+                    if (index + 1 < pathData.length){                      // Next checkpoint in same path
 
+                        // We need to find the id for the node on the next path point to trigger it
+                        nodeUtilities.searchNodeByType('node', pathData[index + 1].objectId, pathData[index + 1].id, null, function (objectKey, toolKey, newNodeKey){
+
+                            console.log('Found node in next pathpoint: ', objectKey, toolKey, newNodeKey);
+
+                            let objectName = server.getObjectNameFromObjectId(objectKey);
+                            let toolName = server.getToolNameFromToolId(objectKey, toolKey);
+                            let newNodeName = server.getNodeNameFromNodeId(objectKey, toolKey, newNodeKey);
+
+                            server.write(objectName, toolName, newNodeName, 1);
+                        });
+
+                    } else {    // We reached end of path
+
+                        console.log('REACHED END OF PATH');
+
+                        pathPointTriggered = null;
+                        currentIndexInPath = null;
+
+                        // Do something here after end of path reached...
+
+                    }
                 }
             }
         }
+        
     });
 }
 

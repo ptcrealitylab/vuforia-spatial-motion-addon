@@ -508,18 +508,20 @@ function updatePinPosition(frameId, position) {
 
 function setIcon() {
 
-    var scaleFactor = Math.abs(lastModelViewMatrix[0]);
-    var zDistance = Math.abs(lastModelViewMatrix[14]);
+    renderIcon(DISTANCES.veryClose);
 
-    let scaledDistance = zDistance / scaleFactor;
-
-    if (scaledDistance < THRESHOLD_VERY_CLOSE) {
-        renderIcon(DISTANCES.veryClose);
-    } else if (scaledDistance < THRESHOLD_CLOSE) {
-        renderIcon(DISTANCES.close);
-    } else {
-        renderIcon(DISTANCES.far);
-    }
+    // var scaleFactor = Math.abs(lastModelViewMatrix[0]);
+    // var zDistance = Math.abs(lastModelViewMatrix[14]);
+    //
+    // let scaledDistance = zDistance / scaleFactor;
+    //
+    // if (scaledDistance < THRESHOLD_VERY_CLOSE) {
+    //     renderIcon(DISTANCES.veryClose);
+    // } else if (scaledDistance < THRESHOLD_CLOSE) {
+    //     renderIcon(DISTANCES.close);
+    // } else {
+    //     renderIcon(DISTANCES.far);
+    // }
 
 }
 
