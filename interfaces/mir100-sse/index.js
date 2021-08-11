@@ -290,7 +290,7 @@ function addNodeListener(pathPointObjectKey, pathPointToolKey, pathPointNodeKey)
 
         console.log('PathPoint triggered in path: ', index);
         
-        if (!inMotion){
+        if (!inMotion){ // This flag prevents the system from reactivating the motion of the robot while it is in action
             
             if (data.value === 1){
 
