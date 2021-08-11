@@ -55,7 +55,7 @@ exports.enabled = settings('enabled');
 exports.configurable = true;
 
 let objectName = 'MIR';
-let hostIP = '10.10.10.30';
+let hostIP = '10.10.10.30'; // MIR100 IP
 let port = 39320;
 //let port = 9090;
 
@@ -358,39 +358,24 @@ function addNodeListener(pathPointObjectKey, pathPointToolKey, pathPointNodeKey)
 }
 
 function computeMIRCoordinatesTo(newCheckpointX, newCheckpointY, checkpointOrientation){
-    
-    //console.log('Compute new coordinates: ', newCheckpointX, newCheckpointY, checkpointOrientation);
 
     let lastDirectionTo = [lastDirectionAR.x, lastDirectionAR.y];
-    
-    //console.log('Last Direction To: ', lastDirectionTo);
 
     let from = [lastPositionAR.x, lastPositionAR.y];
     let to = [newCheckpointX / groundPlaneScaleFactor, newCheckpointY / groundPlaneScaleFactor];
-    
-    //console.log('FROM: ', from);
-    //console.log('TO: ', to);
 
     const newDistance = maths.distance(from, to);                                   // Distance that the robot has to travel to get to the next point
 
     let newDirectionVector = [to[0] - from[0], to[1] - from[1]];                    // newDirection = to - from
-
-    //console.log('New Direction Vector: ', newDirectionVector);
     
     let angleBetween = maths.signed_angle(newDirectionVector, lastDirectionTo);     // Angle between direction vectors
     
     const newDirectionDeg = maths.radians_to_degrees(angleBetween);                 // Angle that the robot has to turn to go to next coordinate in deg
-
-    //console.log('newDirectionDeg: ', newDirectionDeg);
     
     currentOrientationMIR = currentOrientationMIR + newDirectionDeg;                // Angle in the MIR Coordinate system
-    
-    //console.log('Adding new direction to current orientation MIR: ', currentOrientationMIR);
 
     currentPositionMIR.x += newDistance * Math.cos(maths.degrees_to_radians(currentOrientationMIR));
     currentPositionMIR.y += newDistance * Math.sin(maths.degrees_to_radians(currentOrientationMIR));
-
-    //console.log('adding new distance to current position MIR: ', currentPositionMIR);
     
     let angleDifferenceAR = initOrientationAR + checkpointOrientation;
     let newOrientation = initOrientationMIR - angleDifferenceAR;
@@ -398,8 +383,6 @@ function computeMIRCoordinatesTo(newCheckpointX, newCheckpointY, checkpointOrien
     // Normalize to range range (-180, 180]
     if (newOrientation > 180)        { newOrientation -= 360; }
     else if (newOrientation <= -180) { newOrientation += 360; }
-    
-    //console.log('newOrientation: ', newOrientation);
 
     let dataObj = {
         "mission_id": moveToCoordinateGUID,
@@ -533,11 +516,6 @@ function sendRealtimeRobotPosition(){
 
     let newARPosition = positionFromMIRToAR(_currentPosition_MIR, _currentOrientation_MIR);
     
-    //let robotPositionMatrix = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, newARPosition.x * 1000, newARPosition.y * 1000, 0, 1];
-    //console.log('writeObjectPosition from mir100-sse')
-    //server.writeObjectPosition(objectName, robotPositionMatrix);
-
-    //console.log('Send robot AR pos to path: ', newARPosition);
     server.writePublicData(objectName, 'kineticAR', 'realtimepos', 'ARposition', newARPosition);    // Send newARPosition to frame
 }
 
