@@ -1,0 +1,369 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Default UI</title>
+
+    <link rel="stylesheet" href="resources/main.css">
+    
+    <script src="object.js"></script>
+    <script src="objectDefaultFiles/gl-worker.js"></script>
+    
+    <script src="resources/three.js"></script>
+    <script src="resources/SceneUtils.js"></script>
+</head>
+<body>
+<!--<img src="bird.png" style="width: 400px; height: 400px; background-color: rgba(0,0,0,0.5)" alt=""/>
+<div id="pathDisplay" style="position: absolute; left: 0; top: 0; font-family: 'Helvetica Neue', Helvetica, Arial,
+sans-serif; font-size: 28px; color: white; padding: 32px;">
+
+</div>-->
+
+
+<script>
+
+    generateUI();
+
+    let realRenderer, renderer;
+    var camera, scene;
+    var mainContainerObj, groundplaneContainerObj;
+    var rendererWidth;
+    var rendererHeight;
+    var aspectRatio;
+    let robotCenterAxis;   // A reference to the robot position in AR
+    let currentRobotCenterAxis;
+    let robotTwin;
+
+    var isProjectionMatrixSet = false, isGroundPlaneFound = false;
+
+    let spatialInterface = new SpatialInterface();
+    spatialInterface.useWebGlWorker();
+
+
+    main = function() {
+
+      spatialInterface.onRealityInterfaceLoaded(function() {
+        spatialInterface.getScreenDimensions(function(width, height) {
+          document.body.width = width + 'px';
+          document.body.height = height + 'px';
+          rendererWidth = width;
+          rendererHeight = height;
+          aspectRatio = rendererWidth / rendererHeight;
+
+          spatialInterface.changeFrameSize(width, height);
+
+          init();
+        });
+      });
+    };
+    
+    function generateUI(){
+        
+        // Create button for robot calibration reset
+        
+        let domElement = document.createElement('div');
+        let resetButton = document.createElement('button');
+        resetButton.id = 'resetButton';
+        domElement.appendChild( resetButton );
+        document.body.appendChild(domElement);
+        resetButton.addEventListener('pointerdown', resetClicked, false);
+    }
+    
+    function resetClicked(event){
+        spatialInterface.writePublicData('realtimepos', 'resetObjectPosition', Math.random());
+        onReset();
+    }
+    
+    function onReset(){
+        
+        console.log('RESET ROBOT POSITION');
+        
+        // Reset tool position to robot object
+        mainContainerObj.attach( robotCenterAxis );
+        //robotCenterAxis.position.set(320,-440,-520);
+        robotCenterAxis.position.set(0,350,0);
+        robotCenterAxis.position.set(0,0,0);
+        robotCenterAxis.rotation.set(0,0,0);
+        robotCenterAxis.scale.set(2,2,2);
+        robotCenterAxis.updateMatrix();
+
+        // Anchor to groundplane and send new position to server
+        anchorToGroundPlane();
+
+    }
+
+    function init() {
+        
+        realRenderer = new THREE.WebGLRenderer({alpha: true});
+        realRenderer.setPixelRatio(window.devicePixelRatio);
+        realRenderer.setSize(rendererWidth, rendererHeight);
+        realGl = realRenderer.getContext();
+
+        // create a fullscreen webgl renderer for the threejs content and add to the dom
+        renderer = new THREE.WebGLRenderer({context: gl, alpha: true});
+        //renderer.setPixelRatio( window.devicePixelRatio );
+        renderer.setSize(rendererWidth, rendererHeight);
+        //document.body.appendChild( renderer.domElement );
+
+        // create a threejs camera and scene
+        camera = new THREE.PerspectiveCamera(70, aspectRatio, 1, 1000);
+        scene = new THREE.Scene();
+
+        // create a parent 3D object to contain all the three js objects
+        // we can apply the marker transform to this object and all of its
+        // children objects will be affected
+        mainContainerObj = new THREE.Object3D();
+        mainContainerObj.matrixAutoUpdate = false;
+        mainContainerObj.name = 'mainContainerObj';
+        scene.add(mainContainerObj);
+
+        // Create Ground Plane container
+        groundplaneContainerObj = new THREE.Object3D();
+        groundplaneContainerObj.matrixAutoUpdate = false;
+        groundplaneContainerObj.name = 'groundPlaneContainer';
+        scene.add(groundplaneContainerObj);
+
+        let textureRobotMarker = new THREE.TextureLoader().load( 'resources/textures/robotMarker2.png' );
+        let geometryMarker = new THREE.PlaneGeometry( 600, 600, 32 );
+        let materialMarker = new THREE.MeshBasicMaterial( {map: textureRobotMarker, color: 0xffffff, side: THREE.DoubleSide, transparent: true} );
+
+        robotTwin = new THREE.Mesh( geometryMarker, materialMarker );
+        robotTwin.rotateX(Math.PI/2);
+        //robotTwin.position.y += 100;
+
+        groundplaneContainerObj.add(robotTwin);
+        robotTwin.position.set(0, 0, 0);
+
+        robotCenterAxis = generateAxis(1);
+        robotCenterAxis.name = 'robotCenterAxis';
+        mainContainerObj.add( robotCenterAxis );
+        //robotCenterAxis.position.set(320,-440,-520);
+        robotCenterAxis.position.set(0,350,0);
+        robotCenterAxis.position.set(0,0,0);
+        robotCenterAxis.scale.set(2,2,2);
+        
+        // We create a ghost of the robot that will always be positioned at the position of the tool
+        /*currentRobotCenterAxis = generateAxis(3);
+        currentRobotCenterAxis.name = 'currentRobotCenterAxis';
+        mainContainerObj.add( currentRobotCenterAxis );
+        currentRobotCenterAxis.position.set(0,0,0);
+        currentRobotCenterAxis.scale.set(2,2,2);*/
+        
+        // GroundPlane Origin
+        let gp_cube = generateAxis(2);
+        
+        groundplaneContainerObj.add(gp_cube);
+        gp_cube.rotation.set(0,0,0);
+        gp_cube.position.set(0,0,0);
+
+        spatialInterface.onSpatialInterfaceLoaded(function() {
+
+            spatialInterface.initNode('mission', 'mission', 0, -100, 1.5);
+            spatialInterface.initNode('storage', 'storeData', 0, 0);
+
+            spatialInterface.subscribeToMatrix();
+            spatialInterface.setFullScreenOn();
+            spatialInterface.setStickyFullScreenOn();
+
+            // whenever we receive new matrices from the editor, update the 3d scene
+            spatialInterface.addMatrixListener(renderScene);
+            //spatialInterface.setMoveDelay(10);
+            spatialInterface.addGroundPlaneMatrixListener(groundPlaneCallback);
+
+            //spatialInterface.ignoreAllTouches(true);
+            spatialInterface.setMoveDelay(-1);
+            
+            setTimeout(anchorToGroundPlane, 2000);
+
+            spatialInterface.addReadPublicDataListener('realtimepos', 'ARposition', function (data) {
+
+                moveDummyRobot(data);
+
+            });
+            
+            // Method to reset the object position in either the remote operator or the toolbox when we press the reset button on the other one
+            spatialInterface.addReadPublicDataListener('realtimepos', 'resetObjectPosition', function (data) {
+
+                onReset();
+
+            });
+            
+        });
+    }
+    
+    function generateAxis(paletteChoice){
+        
+        let palette1 = [new THREE.Color( 0xff0000 ), new THREE.Color( 0x00ff00 ), new THREE.Color( 0x0000ff )];
+        let palette2 = [new THREE.Color( 0xffff00 ), new THREE.Color( 0x00ffff ), new THREE.Color( 0xff00ff )];
+        let palette3 = [new THREE.Color( 0x6FAAF7 ), new THREE.Color( 0xD7F757 ), new THREE.Color( 0xF7513E )];
+        
+        let palette = null;
+        
+        switch (paletteChoice) {
+            case 1:
+                palette = palette1;
+                break;
+            case 2:
+                palette = palette2;
+                break;
+            case 3:
+                palette = palette3;
+                break;
+            default:
+                palette = palette1;
+                break;
+        }
+        
+        let geometrycube = new THREE.BoxGeometry( 20, 20, 20 );
+        let material = new THREE.MeshBasicMaterial( {color: 0xffffff} );
+        let axis = new THREE.Mesh( geometrycube, material );
+
+        /*let material2 = new THREE.MeshBasicMaterial( {color: palette[0]} );
+        let axis1 = new THREE.Mesh( geometrycube, material2 ); // red = x
+        let material3 = new THREE.MeshBasicMaterial( {color: palette[1]} );
+        let axis2 = new THREE.Mesh( geometrycube, material3 ); // green = y
+        let material4 = new THREE.MeshBasicMaterial( {color: palette[2]} );
+        let axis3 = new THREE.Mesh( geometrycube, material4 ); // blue = z
+
+        axis1.position.set(50,0,0); // red
+        axis2.position.set(0,50,0); // green
+        axis3.position.set(0, 0,50); // blue
+        
+        axis.add(axis1);
+        axis.add(axis2);
+        axis.add(axis3);*/
+        
+        return axis;
+    }
+
+    /**
+     ** Method to update realtime Robot dummy in frame
+     ** data that comes from server:
+     **      data.x, data.y          - realtime MIR AR position
+     **      data.z                  - realtime MIR AR orientation
+     */
+    function moveDummyRobot(data){
+
+        //robotTwin.position.set(-200, 0, 0);
+
+        if (robotTwin != null){
+            let newPosition = new THREE.Vector3(data.x * 1000, 0, data.y * 1000);
+            robotTwin.position.set(newPosition.x, newPosition.y , newPosition.z);
+            robotTwin.rotation.set(robotTwin.rotation.x, robotTwin.rotation.y, (-1) * data.z);
+            //robotTwin.rotation.set(Math.PI/2, data.z, 0);
+            robotTwin.updateMatrix();
+        }
+    }
+
+    /**
+     * This method anchors the robot reference to
+     * groundplane and sends the position and direction to the server.
+     * If your image target is set in a different position/orientation
+     * change this to adjust the coordinates for path planning
+     */
+    function anchorToGroundPlane(){
+        
+        // Anchor object to groundplane
+        groundplaneContainerObj.attach(robotCenterAxis);
+
+        // Send initial position and direction of object to hardware interface
+        
+        let lastDirection = new THREE.Vector3(0,-1,0);      // The up? vector of the cube is pointing towards the front of the robot
+        
+        lastDirection.applyQuaternion( robotCenterAxis.quaternion );
+        console.log('lastdirection: ', lastDirection);
+        
+        let data = {
+            position : {x: robotCenterAxis.position.x, y: robotCenterAxis.position.z},
+            direction : {x: lastDirection.x, y: lastDirection.z}
+        };
+        
+        // Send position and direction to hardware interface
+        spatialInterface.writePublicData('storage', 'calibration',  data);
+    }
+    
+    function setMatrixFromArray(matrix, array) {
+        matrix.set( array[0], array[4], array[8], array[12],
+            array[1], array[5], array[9], array[13],
+            array[2], array[6], array[10], array[14],
+            array[3], array[7], array[11], array[15]
+        );
+    }
+
+    let lastProjectionMatrix = null;
+    let lastModelViewMatrix = null;
+
+    function renderScene(modelViewMatrix, projectionMatrix) {
+        lastProjectionMatrix = projectionMatrix;
+        lastModelViewMatrix = modelViewMatrix;
+    }
+
+    function groundPlaneCallback(groundPlaneMatrix, projectionMatrix){
+
+        if (isProjectionMatrixSet) {
+            isGroundPlaneFound = true;
+            setMatrixFromArray(groundplaneContainerObj.matrix, groundPlaneMatrix);  // update model view matrix
+        }
+    }
+
+    spatialInterface.addReadListener('mission', function(e) {
+        let data = e;
+        console.log('received mission from node');
+        console.log(data);
+        if (data.mode === 'c' && data.unit === 'path') {
+            //parseData(data);
+        }
+    });
+
+    let done = false;
+
+    // Draw the scene repeatedly
+    render = function(_now) {
+
+        // only set the projection matrix for the camera 1 time, since it stays the same
+        if (!isProjectionMatrixSet && lastProjectionMatrix && lastProjectionMatrix.length === 16) {
+            setMatrixFromArray(camera.projectionMatrix, lastProjectionMatrix);
+            camera.projectionMatrixInverse.getInverse(camera.projectionMatrix);
+            isProjectionMatrixSet = true;
+        }
+
+        if (isProjectionMatrixSet && lastModelViewMatrix && lastModelViewMatrix.length === 16) {
+
+            // update model view matrix
+            setMatrixFromArray(mainContainerObj.matrix, lastModelViewMatrix);
+            // render the scene
+            mainContainerObj.visible = true;
+            
+            /*
+            if (farFromLastTracking()){
+                resetClicked();
+            }*/
+
+            if (renderer && scene && camera) {
+                renderer.render(scene, camera);
+            }
+        }
+    };
+    
+    function farFromLastTracking(){
+        // Distance from robotCenterAxis in GroundPlane to currentRobotCenterAxis
+        
+        let isFar = false;
+        
+        let robotCenterAxisPos = new THREE.Vector3();
+        robotCenterAxis.getWorldPosition(robotCenterAxisPos);
+
+        let currentRobotCenterAxisPos = new THREE.Vector3();
+        currentRobotCenterAxis.getWorldPosition(currentRobotCenterAxisPos);
+        
+        if (robotCenterAxisPos.distanceTo(currentRobotCenterAxisPos) > 100){
+            isFar = true;
+        }
+        
+        return isFar;
+        
+    }
+
+</script>
+</body>
+</html>

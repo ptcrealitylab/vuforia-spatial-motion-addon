@@ -14,9 +14,9 @@ let currentWorldId = null;
 let pins = {};
 let defaultPin;
 
-let rendererWidth = screen.height; // width is height because landscape orientation
-let rendererHeight = screen.width; // height is width
-var aspectRatio = rendererWidth / rendererHeight;
+let rendererWidth;
+let rendererHeight;
+var aspectRatio;
 
 window.addEventListener('load', function() {
     if (!spatialInterface) {
@@ -26,8 +26,26 @@ window.addEventListener('load', function() {
 });
 
 // eslint-disable-next-line no-unused-vars
-function main() {
+main = function({width, height}) {
+    document.body.width = width + 'px';
+    document.body.height = height + 'px';
+    rendererWidth = width;
+    rendererHeight = height;
+    aspectRatio = rendererWidth / rendererHeight;
 
+    screenWidth = width;
+    screenHeight = height;
+    canvas.width = screenWidth + 'px';
+    canvas.height = screenHeight + 'px';
+    canvas.style.width = screenWidth + 'px';
+    canvas.style.height = screenHeight + 'px';
+
+    spatialInterface.changeFrameSize(width, height);
+
+    init();
+};
+
+function init() {
     realRenderer = new THREE.WebGLRenderer( { alpha: true } );
     realRenderer.debug.checkShaderErrors = false;
     realRenderer.setPixelRatio(window.devicePixelRatio);
@@ -39,9 +57,9 @@ function main() {
     // create a fullscreen webgl renderer for the threejs content and add to the dom
     renderer = new THREE.WebGLRenderer( { context: gl, alpha: true } );
     renderer.debug.checkShaderErrors = false;
-    renderer.setPixelRatio( window.devicePixelRatio );
+    // renderer.setPixelRatio( window.devicePixelRatio ); // this causes problems with gl canvas
     renderer.setSize( rendererWidth, rendererHeight );
-    document.body.appendChild( renderer.domElement );
+    // document.body.appendChild( renderer.domElement ); // this causes problems with gl canvas
 
     // create a threejs camera and scene
     camera = new THREE.PerspectiveCamera( 70, aspectRatio, 1, 1000 );
@@ -56,42 +74,32 @@ function main() {
     groundPlaneContainerObj.matrixAutoUpdate = false;
     scene.add(groundPlaneContainerObj);
     groundPlaneContainerObj.name = 'groundPlaneContainerObj';
-
+    
     let textureArrow = new THREE.TextureLoader().load('resources/pathArrow2.png');
     splineRenderer = new SplineRender(groundPlaneContainerObj, textureArrow);
 
-    // Create new spline now to avoid problems with glcanvas creating new geometry
-
     let geometrycube = new THREE.BoxGeometry( 10, 10, 10 );
     let material = new THREE.MeshBasicMaterial( {color: 0xffffff} );
-    defaultPin = new THREE.Mesh( geometrycube, material );  // red
+    defaultPin = new THREE.Mesh( geometrycube, material );  // white
     groundPlaneContainerObj.add( defaultPin );
     defaultPin.position.set(0, 0, 0);
 
-    /*
-        let geometrycube = new THREE.BoxGeometry( 10, 10, 10 );
-        let material = new THREE.MeshBasicMaterial( {color: 0xff0000} );
-
-        let material2 = new THREE.MeshBasicMaterial( {color: 0x00ff00} );
-        let material3 = new THREE.MeshBasicMaterial( {color: 0x0000ff} );
-        let cube_z = new THREE.Mesh( geometrycube, material2 ); // green
-        let cube_y = new THREE.Mesh( geometrycube, material3 ); // blue
-        let cube_x = new THREE.Mesh( geometrycube, material );  // red
-        groundPlaneContainerObj.add( cube_x );
-        groundPlaneContainerObj.add( cube_z );
-        groundPlaneContainerObj.add( cube_y );
-        cube_x.position.set(50, 0, 0);
-        cube_y.position.set(0, 50, 0);
-        cube_z.position.set(0, 0, 50);
-        cube_y.name = 'cube_y';
-        cube_z.name = 'cube_z';
-        cube_x.name = 'cube_x';
-
-        let newPos1 = new THREE.Vector3(100, 0, 0);
-        let newPos2 = new THREE.Vector3(0, 100, 0);
-        let newPos3 = new THREE.Vector3(0, 0, 100);
-        let test = [newPos1, newPos2, newPos3];
-        splineRenderer.updateSpline(CAMERA_ID, test);*/
+    
+    let material1 = new THREE.MeshBasicMaterial( {color: 0xff0000} );
+    let material2 = new THREE.MeshBasicMaterial( {color: 0x00ff00} );
+    let material3 = new THREE.MeshBasicMaterial( {color: 0x0000ff} );
+    let cube_z = new THREE.Mesh( geometrycube, material2 ); // green
+    let cube_y = new THREE.Mesh( geometrycube, material3 ); // blue
+    let cube_x = new THREE.Mesh( geometrycube, material1 );  // red
+    groundPlaneContainerObj.add( cube_x );
+    groundPlaneContainerObj.add( cube_z );
+    groundPlaneContainerObj.add( cube_y );
+    cube_x.position.set(50, 0, 0);
+    cube_y.position.set(0, 50, 0);
+    cube_z.position.set(0, 0, 50);
+    cube_y.name = 'cube_y';
+    cube_z.name = 'cube_z';
+    cube_x.name = 'cube_x';
 
 }
 
@@ -156,22 +164,13 @@ let lastModelViewMatrix = null;
 
 spatialInterface.onRealityInterfaceLoaded(function() {
 
-    spatialInterface.getScreenDimensions(function(width, height) {
-        screenWidth = width;
-        screenHeight = height;
-        canvas.width = screenWidth + 'px';
-        canvas.height = screenHeight + 'px';
-        canvas.style.width = screenWidth + 'px';
-        canvas.style.height = screenHeight + 'px';
-
-        //spatialInterface.changeFrameSize(width, height);
-    });
 
     spatialInterface.initNode('path', 'path', 0, 0);
     spatialInterface.sendMoveNode('open', 0, 200); // move auto-generated envelope node to new position
 
     spatialInterface.subscribeToMatrix();
     //spatialInterface.setMoveDelay(10);
+    spatialInterface.setVisibilityDistance(1000);
 
     spatialInterface.addMatrixListener(function(modelView, _projection) {
 
@@ -202,7 +201,6 @@ spatialInterface.onRealityInterfaceLoaded(function() {
         currentWorldId = worldId;
     });
 });
-
 
 
 function renderIcon(distance, forceRender) {
@@ -510,18 +508,20 @@ function updatePinPosition(frameId, position) {
 
 function setIcon() {
 
-    var scaleFactor = Math.abs(lastModelViewMatrix[0]);
-    var zDistance = Math.abs(lastModelViewMatrix[14]);
+    renderIcon(DISTANCES.veryClose);
 
-    let scaledDistance = zDistance / scaleFactor;
-
-    if (scaledDistance < THRESHOLD_VERY_CLOSE) {
-        renderIcon(DISTANCES.veryClose);
-    } else if (scaledDistance < THRESHOLD_CLOSE) {
-        renderIcon(DISTANCES.close);
-    } else {
-        renderIcon(DISTANCES.far);
-    }
+    // var scaleFactor = Math.abs(lastModelViewMatrix[0]);
+    // var zDistance = Math.abs(lastModelViewMatrix[14]);
+    //
+    // let scaledDistance = zDistance / scaleFactor;
+    //
+    // if (scaledDistance < THRESHOLD_VERY_CLOSE) {
+    //     renderIcon(DISTANCES.veryClose);
+    // } else if (scaledDistance < THRESHOLD_CLOSE) {
+    //     renderIcon(DISTANCES.close);
+    // } else {
+    //     renderIcon(DISTANCES.far);
+    // }
 
 }
 
