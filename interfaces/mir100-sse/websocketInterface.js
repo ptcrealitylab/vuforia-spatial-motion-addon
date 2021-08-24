@@ -20,22 +20,22 @@ class WebSocketInterface {
         this._currentRobotPosition = {x:1, y:1};
 
         console.log('MIR: WebSocket trying to connect...', ws_host, ws_port);
-        const ws = new WebSocket(ws_host + ':' + ws_port);
+        this.ws = new WebSocket(ws_host + ':' + ws_port);
 
-        ws.on('open', function open(event) {
+        this.ws.on('open', function open(event) {
             
             console.log('\x1b[95m', 'MIR: WEBSOCKET CONNECTION SUCCESSFUL AT ', '\x1b[32m', hostIP, ':', port);
 
             // Subscribe to robot pose
             const s = '{"op":"subscribe","topic":"/robot_pose"}';
-            ws.send(s);
+            this.ws.send(s);
 
             this.eventEmitter.emit('ok');    // Notify indexjs
 
         }.bind(this));
 
         // Parse robot pose
-        ws.on('message', function incoming(data) {
+        this.ws.on('message', function incoming(data) {
 
             //console.log(data);
 
@@ -50,7 +50,7 @@ class WebSocketInterface {
                                         y:parseFloat(parsedData['msg']['position']['y'])};
         }.bind(this));
 
-        ws.on('error', function error(data) {
+        this.ws.on('error', function error(data) {
             console.warn('\x1b[36m', "MIR: Could not connect to MIR's WebSocket', '\x1b[32m', 'Is the robot on? ☹ ", data);
             this.eventEmitter.emit('ko');    // Notify indexjs
         }.bind(this));
@@ -81,6 +81,12 @@ class WebSocketInterface {
         }
 
         return yaw * (180 / Math.PI);
+    }
+    
+    steerTowards(linear, angular){
+        //s = @"{""op"":""publish"",""topic"":""/cmd_vel"",""msg"":{""linear"":{""x"":" + linear.x + @",""y"":" + linear.y + @",""z"":" + linear.z + @"},""angular"":{""x"":" + angular.x + @",""y"":" + angular.y + @",""z"":" + angular.z + "}}}";
+        let s = '{"op":"publish","topic":"/cmd_vel","msg":{"linear":{"x":"' + linear.x + '","y":"' + linear.y + '","z":"' + linear.z + '"},"angular":{"x":"' + angular.x + '","y":"' + angular.y + '","z":"' + angular.z + '"}}}';
+        this.ws.send(s);
     }
 
     /**

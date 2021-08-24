@@ -193,8 +193,37 @@ function startHardwareInterface() {
 
     });
 
-    server.addNode(objectName, 'kineticAR', 'realtimepos', 'storeData');     // Node for realtime robot position data
+    server.addReadListener(objectName, 'kineticAR', 'joint', function(data) {            // Add listener to node
 
+        //console.log('Data from Joint Node', data);
+        
+        // Joint position in AR
+        let newJointPos = {x: 0, y: 0, z: 0};
+        let newJointspeed = 0;
+        
+        data.value.points.forEach(function (point) {
+
+            //console.log('point: ', point.matrix.elements[12]);
+            
+            speed = point.speed;
+            
+            if (point.matrix !== null){     // Prevent server from crashing if no data
+
+                newJointPos.x = point.matrix.elements[12] / point.matrix.elements[15];
+                newJointPos.y = (-1)*point.matrix.elements[13] / point.matrix.elements[15];
+                newJointPos.z = point.matrix.elements[14] / point.matrix.elements[15];
+                
+            }
+        });
+        
+        console.log('newJointPos: ', newJointPos);
+        
+        followJoint(newJointPos, newJointspeed);
+
+    });
+
+    server.addNode(objectName, 'kineticAR', 'realtimepos', 'storeData');     // Node for realtime robot position data
+    
 
     server.addPublicDataListener(objectName, 'kineticAR', 'storage', 'calibration', function (data) {
 
@@ -355,6 +384,13 @@ function addNodeListener(pathPointObjectKey, pathPointToolKey, pathPointNodeKey)
         }
         
     });
+}
+
+function followJoint(jointPos){
+    
+    
+    
+    
 }
 
 function computeMIRCoordinatesTo(newCheckpointX, newCheckpointY, checkpointOrientation){

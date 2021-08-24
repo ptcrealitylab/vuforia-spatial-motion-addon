@@ -161,6 +161,8 @@ sans-serif; font-size: 28px; color: white; padding: 32px;">
             spatialInterface.initNode('mission', 'mission', 0, -100, 1.5);
             spatialInterface.initNode('storage', 'storeData', 0, 0);
 
+            spatialInterface.initNode('joint', 'pathPoint', 0, -400, 1.5);    // Node to connect joint to control motion via skeleton
+
             spatialInterface.subscribeToMatrix();
             spatialInterface.setFullScreenOn();
             spatialInterface.setStickyFullScreenOn();

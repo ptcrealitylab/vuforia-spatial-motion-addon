@@ -1,0 +1,32 @@
+html, body { height: 100% }
+
+body {
+    margin: auto;
+    color: white;
+    font-family: Roboto;
+    overflow: hidden;
+    background-color: transparent;
+}
+
+#skeletonBody {
+    position: absolute;
+    background-image: url("img/body.png");
+    background-color: transparent;
+    background-size: cover;
+    top: 0;
+    left: 0;
+    opacity: 0.5;
+    width: 100vh;
+    height: 100vh;
+}
+
+#playPauseButton {
+    position: absolute;
+    background-image: url("img/play.png");
+    background-color: transparent;
+    background-size: 100%;
+    width: 60px;
+    height: 60px;
+    top: 10px;
+    left: 10px;
+}
