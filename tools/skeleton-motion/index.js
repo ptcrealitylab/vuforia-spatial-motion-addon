@@ -213,7 +213,6 @@ function init() {
     create2DUserInterface();
 
     createJoints();
-    
 
     spatialInterface.onSpatialInterfaceLoaded(function() {
 
@@ -341,6 +340,16 @@ function updateJointsPos() {
             if (skel.id === 'mir') {
                 continue;
             }
+
+            /*
+            let phonePos = new THREE.Vector3(0,0,-200);
+            groundPlaneContainerObj.worldToLocal(phonePos);
+
+            // Sending phone position through pelvis joint
+            if (poseJointsSpheres[0]){
+                poseJointsSpheres[0].position.set(phonePos.x, phonePos.y, phonePos.z);
+                updatePositionServer(0);
+            }*/
             
             // z is flipped
             for (let i = 0; i < POSE_JOINTS.length; i++) {

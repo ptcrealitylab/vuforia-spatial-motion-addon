@@ -84,17 +84,12 @@ class WebSocketInterface {
     }
     
     steerTowards(linear, angular){
-        //s = @"{""op"":""publish"",""topic"":""/cmd_vel"",""msg"":{""linear"":{""x"":" + linear.x + @",""y"":" + linear.y + @",""z"":" + linear.z + @"},""angular"":{""x"":" + angular.x + @",""y"":" + angular.y + @",""z"":" + angular.z + "}}}";
-        let s = '{"op":"publish","topic":"/cmd_vel","msg":{"linear":{"x":"' + linear.x + '","y":"' + linear.y + '","z":"' + linear.z + '"},"angular":{"x":"' + angular.x + '","y":"' + angular.y + '","z":"' + angular.z + '"}}}';
+        let s = '{"op":"publish","topic":"/cmd_vel","msg":{"linear":{"x":' + linear.x + ',"y":' + linear.y + ',"z":' + linear.z + '},"angular":{"x":' + angular.x + ',"y":' + angular.y + ',"z":' + angular.z + '}}}';
+        
+        console.log(s);
+        
         this.ws.send(s);
     }
-
-    /**
-     * From Unity project. move robot in realtime
-     public void MoveCommand(Vector3 linear, Vector3 angular){
-        string s = @"{""op"":""publish"",""topic"":""/cmd_vel"",""msg"":{""linear"":{""x"":" + linear.x + @",""y"":" + linear.y + @",""z"":" + linear.z + @"},""angular"":{""x"":" + angular.x + @",""y"":" + angular.y + @",""z"":" + angular.z + "}}}";
-        Send(s);
-    }*/
 }
 
 exports.WebSocketInterface = WebSocketInterface;

@@ -169,6 +169,7 @@ let initPositionMIR = {x: 0, y: 0};         // Initial position of the robot in 
 let initOrientationMIR = 0;                 // Initial orientation of the robot in her MIR map when the user tracks it with the phone
 let initOrientationAR = 0;                  // Initial orientation of the robot in AR when the user tracks it with the phone
 let initialSync = false;
+let currentMIRcoordinatesInAR = {x: 0, y: 0, z:0};
 
 function startHardwareInterface() {
     
@@ -204,19 +205,17 @@ function startHardwareInterface() {
         data.value.points.forEach(function (point) {
 
             //console.log('point: ', point.matrix.elements[12]);
-            
-            speed = point.speed;
+
+            newJointspeed = point.speed;
             
             if (point.matrix !== null){     // Prevent server from crashing if no data
 
                 newJointPos.x = point.matrix.elements[12] / point.matrix.elements[15];
-                newJointPos.y = (-1)*point.matrix.elements[13] / point.matrix.elements[15];
+                newJointPos.y = point.matrix.elements[13] / point.matrix.elements[15];
                 newJointPos.z = point.matrix.elements[14] / point.matrix.elements[15];
                 
             }
         });
-        
-        console.log('newJointPos: ', newJointPos);
         
         followJoint(newJointPos, newJointspeed);
 
@@ -386,11 +385,51 @@ function addNodeListener(pathPointObjectKey, pathPointToolKey, pathPointNodeKey)
     });
 }
 
-function followJoint(jointPos){
+const clamp = (num, min, max) => Math.min(Math.max(num, min), max);
+let lastJointPos = 0;
+function followJoint(jointPos, jointSpeed){
     
-    
-    
-    
+    if (jointSpeed > 0){
+        
+        if (lastJointPos === 0){
+            // First register
+            lastJointPos = jointPos;
+        } else {
+            //let movementVector = {x:jointPos.x-lastJointPos.x, y: jointPos.z-lastJointPos.z};
+            
+            // Get MIR coordinates in AR space
+            let mirDirection_AR = currentMIRcoordinatesInAR.z;
+            let mirPosition_AR = {x:currentMIRcoordinatesInAR.x * groundPlaneScaleFactor, y:currentMIRcoordinatesInAR.y * groundPlaneScaleFactor};
+
+            let from = [mirPosition_AR.x, mirPosition_AR.y];
+            let to = [jointPos.x, jointPos.z];
+
+            let distance = maths.distance(from, to);
+
+            //console.log('from: ', from);
+            //console.log('to: ', to);
+            //console.log('mir direction deg: ', mirDirection_AR * 180/Math.PI);
+            //console.log('distance: ', distance);
+            
+            if (distance > 1000){ // 1 meter
+                // Steer MIR from mirPosition_AR to jointPos
+
+                let directionToJoint = {x:jointPos.x - mirPosition_AR.x, y:jointPos.z-mirPosition_AR.y};
+
+                let angleBetween =  (-1) * maths.signed_angle([lastDirectionAR.x, lastDirectionAR.y], [directionToJoint.x, directionToJoint.y]);
+                
+                angleBetween = clamp(angleBetween, -1, 1);  // prevention
+                
+                let angularVelocity = {x:0,y:0,z:angleBetween};
+                let linearVelocity = {x:0.5,y:0,z:0};           // MIR only travels in his own x direction
+                
+                websocket.steerTowards(linearVelocity, angularVelocity);
+
+                lastDirectionAR.x = Math.cos(mirDirection_AR);
+                lastDirectionAR.y = (-1) * Math.sin(mirDirection_AR);
+            }
+        }
+    }
 }
 
 function computeMIRCoordinatesTo(newCheckpointX, newCheckpointY, checkpointOrientation){
@@ -550,9 +589,9 @@ function sendRealtimeRobotPosition(){
     let _currentOrientation_MIR = websocket.currentYaw();                       // Orientation of the robot at this frame in degrees (from WebSocket)
     let _currentPosition_MIR = websocket.currentRobotPosition;                  // Position of the robot at this frame
 
-    let newARPosition = positionFromMIRToAR(_currentPosition_MIR, _currentOrientation_MIR);
+    currentMIRcoordinatesInAR = positionFromMIRToAR(_currentPosition_MIR, _currentOrientation_MIR);
     
-    server.writePublicData(objectName, 'kineticAR', 'realtimepos', 'ARposition', newARPosition);    // Send newARPosition to frame
+    server.writePublicData(objectName, 'kineticAR', 'realtimepos', 'ARposition', currentMIRcoordinatesInAR);    // Send newARPosition to frame
 }
 
 
@@ -595,6 +634,8 @@ function positionFromMIRToAR(newPosition, newDirectionAngle)
     return newARPosition;
 }
 
+let wsOK = false;
+
 /**
  * @desc Connect to websocket. If it fails, try to connect again. If success, continue with rest api requests
  * REST requests will only be triggered when WebSocket connection is successful
@@ -604,6 +645,9 @@ function connectWebsocket(){
     websocket = new WebSocketInterface(hostIP, port);
 
     websocket.eventEmitter.on('ok', function(){
+
+        wsOK = true;
+        
         startRESTRequests();                                                 // Start REST requests
         exports.settings.isRobotConnected.value = true;
         server.pushSettingsToGui('mir100-sse', exports.settings);   // Update GUI in browser
@@ -647,6 +691,15 @@ function requestStatus(){
 function updateEvery(i, time) {
     setTimeout(() => {
         if (enableMIRConnection && initialSync) sendRealtimeRobotPosition();
+
+        /*if (wsOK){
+            console.log('MOVING MIR****************************');
+            let linear = {x:0.1,y:0,z:0};   // MIR only travels in his own x direction
+            let angular = {x:0,y:0,z:0.1};  // MIR only rotates in its own z axis
+            websocket.steerTowards(linear, angular);
+        }*/
+        
+        
         updateEvery(++i, time);
     }, time)
 }
