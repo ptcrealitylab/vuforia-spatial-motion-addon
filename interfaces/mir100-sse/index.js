@@ -405,11 +405,6 @@ function followJoint(jointPos, jointSpeed){
             let to = [jointPos.x, jointPos.z];
 
             let distance = maths.distance(from, to);
-
-            //console.log('from: ', from);
-            //console.log('to: ', to);
-            //console.log('mir direction deg: ', mirDirection_AR * 180/Math.PI);
-            //console.log('distance: ', distance);
             
             if (distance > 1000){ // 1 meter
                 // Steer MIR from mirPosition_AR to jointPos

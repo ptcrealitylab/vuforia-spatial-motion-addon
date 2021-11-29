@@ -85,7 +85,7 @@ function init() {
     defaultPin.position.set(0, 0, 0);
 
     
-    let material1 = new THREE.MeshBasicMaterial( {color: 0xff0000} );
+    /*let material1 = new THREE.MeshBasicMaterial( {color: 0xff0000} );
     let material2 = new THREE.MeshBasicMaterial( {color: 0x00ff00} );
     let material3 = new THREE.MeshBasicMaterial( {color: 0x0000ff} );
     let cube_z = new THREE.Mesh( geometrycube, material2 ); // green
@@ -99,7 +99,7 @@ function init() {
     cube_z.position.set(0, 0, 50);
     cube_y.name = 'cube_y';
     cube_z.name = 'cube_z';
-    cube_x.name = 'cube_x';
+    cube_x.name = 'cube_x';*/
 
 }
 

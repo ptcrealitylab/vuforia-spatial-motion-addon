@@ -1,5 +1,5 @@
 /* global THREE, SpatialInterface, window, realGl, gl, proxies, document, EnvelopeContents, io, spatialObject */
-const ipPort = '10.10.10.145:31337';
+const ipPort = '192.168.86.25:31337';
 
 let socket;
 let doUpdateSensorDescription = true;
@@ -16,7 +16,7 @@ let poseJointsSpheres = [];
 let initTimer = 0;
 let skelGroup = new THREE.Group();
 let globalSpeed = 0;
-let playPauseButton;
+let followButton, mimicButton;
 
 const POSE_JOINTS = [
     {id: 'JOINT_PELVIS', index: 0, nodeScreenX: -243, nodeScreenY: -10},
@@ -286,17 +286,25 @@ function create2DUserInterface(){
     skeletonBody.id = 'skeletonBody';
     
     document.body.appendChild( skeletonBody );
-    
-    playPauseButton = document.createElement('button');
-    playPauseButton.id = 'playPauseButton';
+
+    followButton = document.createElement('button');
+    followButton.id = 'followButton';
     
 
-    document.body.appendChild( playPauseButton );
+    document.body.appendChild( followButton );
 
-    playPauseButton.addEventListener('pointerdown', onPlayButtonDown, false);
+    followButton.addEventListener('pointerdown', onFollowButtonDown, false);
+
+    mimicButton = document.createElement('button');
+    mimicButton.id = 'mimicButton';
+
+
+    document.body.appendChild( mimicButton );
+
+    mimicButton.addEventListener('pointerdown', onMimicButtonDown, false);
 }
 
-function onPlayButtonDown(){
+function onFollowButtonDown(){
     
     console.log('play button');
     
@@ -306,13 +314,24 @@ function onPlayButtonDown(){
         
         globalSpeed = 1;
 
-        playPauseButton.style.backgroundImage = "url('img/pause.png')";
+        followButton.style.backgroundImage = "url('img/pause.png')";
     } else {
 
         console.log('pause');
         
         globalSpeed = 0;
-        playPauseButton.style.backgroundImage = "url('img/play.png')";
+        followButton.style.backgroundImage = "url('img/play.png')";
+    }
+}
+
+function onMimicButtonDown(){
+
+    console.log('mimic button');
+
+    if (globalSpeed === 0){
+        
+    } else {
+        
     }
 }
 
